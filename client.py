@@ -14,8 +14,13 @@ def create_server():
     seq_num = 1  # Initial sequence number
     cwnd = 1  # Congestion Window inicial
     ssthresh = 8  # Slow Start Threshold inicial
+    last_ack = 0  # Last ACK received
+    
 
-    while seq_num <= 20:  # Send 10 packets as an example
+
+    while seq_num <= 20:  # Send 20 packets as an example
+        acks_received = 0  # Number of ACKs received
+        
         for _ in range(cwnd):  # Send up to cwnd packets
             if seq_num <= 20:
                 print(f"📤 Sending packet {seq_num}")
@@ -23,31 +28,36 @@ def create_server():
                 seq_num += 1
 
         # Wait for ACKs
-        acks_received = 0
+        
         while acks_received < cwnd:
             try:
-                client_socket.settimeout(1)  # Timeout for receiving ACK
+                new_cwnd = cwnd
+                client_socket.settimeout(3)  # Timeout de 3 segundos
                 ack_data, _ = client_socket.recvfrom(BUFFER_SIZE)
                 ack_msg = ack_data.decode()
                 last_ack = int(ack_msg.split()[1])
-                print(f"Server confirmed up to {last_ack}")
+                print(f"Server confirmou até {last_ack}")
+
                 acks_received += 1
+                print("acks_received: ", acks_received)
+                print("cwmd: ", cwnd)
 
                 if cwnd < ssthresh:
                     cwnd *= 2  # Crescimento exponencial
                 else:
                     cwnd += 1  # Crescimento linear
 
+                if acks_received == new_cwnd:
+                    break
+
+
+
             except socket.timeout:
                 print("Timeout: No response from server. Ajustando cwnd e ssthresh...")
                 ssthresh = max(2, cwnd // 2)  # Reduz ssthresh pela metade
                 cwnd = 1  # Volta para Slow Start
-                seq_num -= acks_received  # Resend the missing packets
+                seq_num = last_ack + 1  # Reenvia pacotes perdidos
                 break
-            
-            except socket.error as e:
-                print(f"Socket error: {e}")
-                break
-  # Small delay between sends
+
 
 create_server()

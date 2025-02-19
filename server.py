@@ -9,7 +9,7 @@ def create_server():
     PORT = 8080
     BUFFER_SIZE = 1024
     WIN_SIZE = 3  # Fixed reception window size
-    LOSS_PROB = 0.10  # Packet loss probability
+    LOSS_PROB = 0.1  # Packet loss probability
 
     # Create UDP socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -18,7 +18,7 @@ def create_server():
     print(f"Server running on {HOST}:{PORT}, Window Size = {WIN_SIZE}")
 
     received_packets = {}  # Stores received packets
-    expected_seq = 0  # Expected sequence number
+    expected_seq = 1  # Expected sequence number
 
     while True:
         data, addr = server_socket.recvfrom(BUFFER_SIZE)
@@ -27,14 +27,13 @@ def create_server():
 
         if random.random() < LOSS_PROB:
             print(f"Pacote {seq_num} não chegou no server!")
-            # Ignora o pacote e não envia ACK
+            #Ignora o pacote e não envia ACK
 
-        # Simulate packet processing delay
+        #Simulate packet processing delay
 
         else:
             time.sleep(0.1) #simular tempo de processamento de pacote
-            print("seq_num:", seq_num)
-            print('expected_seq:', expected_seq)
+
 
             if seq_num == expected_seq:
                 print(f"Packet {seq_num} received correctly.")
