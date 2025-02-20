@@ -5,31 +5,34 @@ import random
 
 def create_server():
     # Server settings
-    HOST = "127.0.0.1"
-    PORT = 8080
-    BUFFER_SIZE = 1024
-    WIN_SIZE = 3  # Fixed reception window size
-    LOSS_PROB = 0.1  # Packet loss probability
+    HOST = "127.0.0.1" #Endereço do servidor (localhost)
+    PORT = 8080 #Porta do servidor
+    BUFFER_SIZE = 1024 #Tamanho do buffer para receber dados
+    WIN_SIZE = 3  # Tamanho da janela deslizante REVISAR A NECESSIDADE DESSE CARA
+    LOSS_PROB = 0.1 # Probabilidade de perda de pacotes(10%)
 
     # Create UDP socket
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    server_socket.bind((HOST, PORT))
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #Cria um socket UDP (socket.AF_INET, socket.SOCK_DGRAM), pois UDP não estabelece conexão prévia como TCP.
+    server_socket.bind((HOST, PORT)) #Associa o socket ao endereço e porta do servidor.
 
     print(f"Server running on {HOST}:{PORT}, Window Size = {WIN_SIZE}")
 
-    received_packets = {}  # Stores received packets
-    expected_seq = 1  # Expected sequence number
+    received_packets = {}  #  Um dicionário que armazena pacotes recebidos
+    expected_seq = 1  # Controla qual número de sequência o servidor espera receber.
 
     while True:
-        data, addr = server_socket.recvfrom(BUFFER_SIZE)
-        seq_num = int(data.decode())  # Convert received packet number
-
+        data, addr = server_socket.recvfrom(BUFFER_SIZE) # Espera receber um pacote
+        seq_num = int(data.decode())  # Converte o número do pacote recebido
+        #O servidor fica rodando indefinidamente, esperando pacotes.
+        # recvfrom(BUFFER_SIZE) → Aguarda receber dados do cliente e retorna:
+        # data → O conteúdo recebido (número do pacote).
+        # addr → O endereço e a porta do cliente que enviou o pacote.
 
         if random.random() < LOSS_PROB:
             print(f"Pacote {seq_num} não chegou no server!")
-            #Ignora o pacote e não envia ACK
-
-        #Simulate packet processing delay
+            #random.random() gera um número aleatório entre 0 e 1.
+            # Se esse número for menor que LOSS_PROB (0.1), significa que o pacote foi "perdido".
+            # O servidor simula essa perda ignorando o pacote e não enviando ACK.
 
         else:
             time.sleep(0.1) #simular tempo de processamento de pacote
