@@ -2,12 +2,13 @@ import socket
 import time
 import random
 from graph import plot_vazão, plot_packet_loss
+import numpy as np
 
 def create_server():
     SERVER_IP = "127.0.0.1"
     SERVER_PORT = 8080
     BUFFER_SIZE = 1024
-    LOSS_PROB = 0.000
+    LOSS_PROB = 0.00
     receive_times = {}
     start_time = time.time()
     loss_times = []
@@ -21,6 +22,7 @@ def create_server():
 
     received_packets = {}
     expected_seq = 0
+    all_packets = np.zeros(10001)
 
     while True:
         try:
@@ -37,6 +39,8 @@ def create_server():
 
             received_packets[seq_num] = msg
             receive_times[seq_num] = recv_time
+            all_packets[seq_num] = 1
+            time.sleep(0.0001)
 
             # Entrega ordenada
             while expected_seq in received_packets:
@@ -57,6 +61,8 @@ def create_server():
         if expected_seq == 10001:
             plot_vazão(receive_times)  # Vazão vs. Tempo
             plot_packet_loss(loss_times)    # Número de Pacotes Perdidos vs. Tempo
+            all_lost_packets = np.where(all_packets == 0)[0]
+            print(f"Pacotes perdidos por espaço: {len(all_lost_packets)}")
 
 
 
@@ -67,7 +73,7 @@ def create_server_sem_controle():
     SERVER_IP = "127.0.0.1"
     SERVER_PORT = 8080
     BUFFER_SIZE = 1024
-    LOSS_PROB = 0.001
+    LOSS_PROB = 0.000
     receive_times = {}
     start_time = time.time()
     loss_times = []
@@ -81,6 +87,7 @@ def create_server_sem_controle():
     received_packets = {}
     expected_seq = 0
     lost_packets = []
+    all_packets = np.zeros(10001)
 
     while True:
         try:
@@ -98,7 +105,9 @@ def create_server_sem_controle():
 
             received_packets[seq_num] = msg
             receive_times[seq_num] = recv_time
-                
+            all_packets[seq_num] = 1
+            time.sleep(0.0001)
+
             # Entrega ordenada
             while expected_seq in received_packets:
                 print(f"Entregando pacote {expected_seq} à aplicação.")
@@ -109,11 +118,15 @@ def create_server_sem_controle():
             print(f"Erro no servidor: {e}")
             break
 
-        if seq_num == 10000:
+        if seq_num_str == "-1":
+            all_lost_packets = np.where(all_packets == 0)[0]
             plot_vazão(receive_times)  # Vazão vs. Tempo
             plot_packet_loss(loss_times)    # Número de Pacotes Perdidos vs. Tempo
-            print(f"Pacotes perdidos: {lost_packets}")
+            
+            print(f"Pacotes perdidos por rede: {lost_packets}")
+            print(f"Pacotes perdidos por espaço: {len(all_lost_packets)}")
+            break
 
-create_server_sem_controle()
+create_server()
 
 

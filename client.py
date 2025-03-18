@@ -113,7 +113,13 @@ def create_client_sem_controle():
         print(f"Pacote {seq_num} enviado")
         seq_num += 1
 
+    # Envia uma mensagem de término de envio
+    time.sleep(5)
+    end_msg = "-1|Todos os pacotes foram enviados"
+    client_socket.sendto(end_msg.encode(), server_addr)
+    print("Mensagem de término de envio enviada.")
+
     print("Todos os pacotes foram enviados.")
     client_socket.close()
 
-create_client_sem_controle()
+create_client()

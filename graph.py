@@ -96,3 +96,4 @@ def plot_vazão(receive_times, interval=1):
     plt.title("Vazão vs. Tempo")
     plt.grid()
     plt.show()
+
