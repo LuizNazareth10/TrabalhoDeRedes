@@ -1,13 +1,14 @@
 import socket
 import random
 import time
+from graph import plot_cwnd, plot_retransmissions
 
 def create_client():
     HOST = "127.0.0.1"
     PORT = 8080
     BUFFER_SIZE = 1024
     TOTAL_PACKETS = 10000
-    TIMEOUT = 10  # Tempo limite para receber um ACK (em segundos)
+    TIMEOUT = 0.3  # Tempo limite para receber um ACK (em segundos)
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_addr = (HOST, PORT)
@@ -18,6 +19,11 @@ def create_client():
     ssthresh = 16
     pac_env_not_confirm = {}  # Dicionário para armazenar pacotes enviados e não confirmados (seq_num: data)
     next_ack_expected = 0 # Próximo número de ACK esperado
+    start_time = time.time()
+    cwnd_values = []
+    time_values = []
+    retransmit_times = []
+
 
     while seq_num <= TOTAL_PACKETS or pac_env_not_confirm:
         # Envia pacotes dentro da janela de congestionamento
@@ -56,6 +62,11 @@ def create_client():
 
                 cwnd = min(cwnd, rwnd)
 
+                print(f"Janela de congestionamento: {cwnd}, ssthresh: {ssthresh}")
+                cwnd_values.append(cwnd)
+                time_values.append(time.time() - start_time)
+
+
         except socket.timeout:
             print("Tempo de espera expirou, reenviando pacotes não confirmados.")
             ssthresh = max(cwnd // 2, 1)
@@ -64,12 +75,45 @@ def create_client():
             for seq, data in pac_env_not_confirm.items():
                 print(f"Reenviando pacote {seq}")
                 client_socket.sendto(data, server_addr)
+            cwnd_values.append(cwnd)
+            retransmit_times.append(time.time() - start_time)
+            time_values.append(time.time() - start_time)
+
+
 
         except Exception as e:
             print(f"Ocorreu um erro: {e}")
             break
 
     print("Todos os pacotes foram enviados (ou tentativas de envio realizadas).")
+
+
+    
+    print('tamanho time values:',len(time_values), 'tamanho cwndvalues:', len(cwnd_values))
+    plot_cwnd(cwnd_values, time_values)  # Tamanho da Janela de Congestionamento vs. Tempo
+    plot_retransmissions(retransmit_times)  # Tempo de Retransmissão vs. Número de Pacotes Enviados
+
+    
     client_socket.close()
 
-create_client()
+def create_client_sem_controle():
+    HOST = "127.0.0.1"
+    PORT = 8080
+    BUFFER_SIZE = 1024
+    TOTAL_PACKETS = 10000
+
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    server_addr = (HOST, PORT)
+
+    seq_num = 0
+
+    while seq_num <= TOTAL_PACKETS:
+        msg = f"{seq_num}|Dados_{random.randint(1000, 9999)}"
+        client_socket.sendto(msg.encode(), server_addr)
+        print(f"Pacote {seq_num} enviado")
+        seq_num += 1
+
+    print("Todos os pacotes foram enviados.")
+    client_socket.close()
+
+create_client_sem_controle()
